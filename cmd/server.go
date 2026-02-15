@@ -101,11 +101,12 @@ func startServer() {
 		}
 	}()
 
-	// Set up graceful shutdown
+	// Set up shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit // block until a signal is received
-	slog.Info("Shutting down Sentinel server gracefully...")
-	grpcServer.GracefulStop()
+
+	slog.Info("Shutting down Sentinel server...")
+	grpcServer.Stop()
 	slog.Info("Sentinel server stopped.")
 }
