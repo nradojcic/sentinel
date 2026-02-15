@@ -13,17 +13,44 @@ type Stats struct {
 	RAM float64
 }
 
-// GetStats collects current CPU and RAM usage
-func GetStats() (Stats, error) {
-	// Get CPU usage over a short interval (e.g., 100ms)
+// StatsCollector defines an interface for collecting system stats.
+// This allows for mocking in tests
+type StatsCollector interface {
+	CPUPercent() ([]float64, error)
+	VirtualMemory() (*mem.VirtualMemoryStat, error)
+}
+
+// GopsutilCollector is a real implementation of StatsCollector using gopsutil.
+type GopsutilCollector struct{}
+
+// CPUPercent implements the StatsCollector interface for CPU stats.
+func (c GopsutilCollector) CPUPercent() ([]float64, error) {
 	// For 0 duration, it reads overall CPU usage since last call or system boot
-	cpuPercent, err := cpu.Percent(time.Duration(0), false)
+	return cpu.Percent(time.Duration(0), false)
+}
+
+// VirtualMemory implements the StatsCollector interface for memory stats.
+func (c GopsutilCollector) VirtualMemory() (*mem.VirtualMemoryStat, error) {
+	return mem.VirtualMemory()
+}
+
+// GetStats collects current CPU and RAM usage using the real gopsutil collector.
+// The public-facing function
+func GetStats() (Stats, error) {
+	return getStats(GopsutilCollector{})
+}
+
+// getStats is the internal, testable function that contains the core logic.
+func getStats(collector StatsCollector) (Stats, error) {
+	cpuPercent, err := collector.CPUPercent()
 	if err != nil {
 		return Stats{}, fmt.Errorf("failed to get CPU percent: %w", err)
 	}
+	if len(cpuPercent) == 0 {
+		return Stats{}, fmt.Errorf("cpu.Percent returned no values")
+	}
 
-	// Get Virtual Memory stats
-	vMem, err := mem.VirtualMemory()
+	vMem, err := collector.VirtualMemory()
 	if err != nil {
 		return Stats{}, fmt.Errorf("failed to get virtual memory: %w", err)
 	}
