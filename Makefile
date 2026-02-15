@@ -19,9 +19,11 @@ test:
 
 ## coverage: Runs tests and generates a coverage report
 coverage:
-	@echo "Generating coverage report..."
+	@echo "Generating coverage report (excluding proto)..."
 	go test -coverprofile=coverage.out ./...
+	@grep -v "/proto/" coverage.out > coverage.tmp && mv coverage.tmp coverage.out
 	go tool cover -html=coverage.out -o coverage.html
+	@echo "Done! Open coverage.html to see results."
 
 ## gen: Generate Go code from Protocol Buffer files
 gen:
