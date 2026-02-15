@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/nradojcic/sentinel/internal/store"
 	pb "github.com/nradojcic/sentinel/proto"
@@ -69,7 +71,7 @@ func (s *metricsServer) ReportMetrics(stream pb.MetricsService_ReportMetricsServ
 			"agent_id", req.AgentId,
 			"cpu", fmt.Sprintf("%.2f%%", req.CpuUsage),
 			"ram", fmt.Sprintf("%.2f%%", req.MemUsage),
-			"timestamp", req.Timestamp.AsTime(), // Use AsTime for logging
+			"timestamp", req.Timestamp.AsTime(),
 		)
 		reportsReceived++
 	}
@@ -90,8 +92,20 @@ func startServer() {
 	pb.RegisterMetricsServiceServer(grpcServer, &metricsServer{store: myStore})
 
 	slog.Info("Sentinel server starting", "port", port)
-	if err := grpcServer.Serve(lis); err != nil {
-		slog.Error("Failed to serve gRPC server", "error", err)
-		os.Exit(1)
-	}
+
+	// Start gRPC server in a goroutine
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			slog.Error("Failed to serve gRPC server", "error", err)
+			os.Exit(1)
+		}
+	}()
+
+	// Set up graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit // block until a signal is received
+	slog.Info("Shutting down Sentinel server gracefully...")
+	grpcServer.GracefulStop()
+	slog.Info("Sentinel server stopped.")
 }
