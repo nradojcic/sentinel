@@ -1,0 +1,119 @@
+# This file defines a multi-container Docker application
+# It sets up one Sentinel server and five Sentinel agents
+# To run: docker-compose up --build
+
+services:
+  # The Central Monitoring Server
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: sentinel-server
+    ports:
+      # Expose the server's gRPC port to the host machine.
+      - "50051:50051"
+    networks:
+      - sentinel-net
+
+  # --- Agent Containers ---
+
+  agent-1:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    # Override the default CMD to provide specific arguments for this agent.
+    command: >
+      /bin/sh -c "/sentinel agent 
+      --agent-id=agent-pro-01 
+      --server-addr=server:50051 
+      --interval=5"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    networks:
+      - sentinel-net
+    depends_on:
+      - server
+
+  agent-2:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    command: >
+      /bin/sh -c "/sentinel agent 
+      --agent-id=agent-pro-02 
+      --server-addr=server:50051 
+      --interval=5"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    networks:
+      - sentinel-net
+    depends_on:
+      - server
+
+  agent-3:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    command: >
+      /bin/sh -c "/sentinel agent 
+      --agent-id=agent-lite-03 
+      --server-addr=server:50051 
+      --interval=10"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 128M
+    networks:
+      - sentinel-net
+    depends_on:
+      - server
+
+  agent-4:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    command: >
+      /bin/sh -c "/sentinel agent 
+      --agent-id=agent-lite-04 
+      --server-addr=server:50051 
+      --interval=10"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 128M
+    networks:
+      - sentinel-net
+    depends_on:
+      - server
+
+  agent-5:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    command: >
+      /bin/sh -c "/sentinel agent 
+      --agent-id=agent-tiny-05 
+      --server-addr=server:50051 
+      --interval=15"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
+    networks:
+      - sentinel-net
+    depends_on:
+      - server
+
+# Define the network that allows containers to communicate with each other.
+networks:
+  sentinel-net:
+    driver: bridge
