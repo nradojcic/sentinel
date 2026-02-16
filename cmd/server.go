@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log/slog"
@@ -8,7 +9,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/nradojcic/sentinel/internal/dashboard"
 	"github.com/nradojcic/sentinel/internal/store"
 	pb "github.com/nradojcic/sentinel/proto"
 	"github.com/spf13/cobra"
@@ -17,6 +20,7 @@ import (
 )
 
 var serverPort string
+var httpPort string
 
 // serverCmd represents the server command
 var serverCmd = &cobra.Command{
@@ -33,6 +37,9 @@ func init() {
 
 	serverCmd.PersistentFlags().StringVar(&serverPort, "port", "50051", "The server port to listen on")
 	viper.BindPFlag("server.port", serverCmd.PersistentFlags().Lookup("port"))
+
+	serverCmd.PersistentFlags().StringVar(&httpPort, "http-port", "8080", "The HTTP server port for the dashboard")
+	viper.BindPFlag("server.http-port", serverCmd.PersistentFlags().Lookup("http-port"))
 }
 
 // metricsServer implements the MetricsServiceServer interface
@@ -77,23 +84,22 @@ func (s *metricsServer) ReportMetrics(stream pb.MetricsService_ReportMetricsServ
 	}
 }
 
-// startServer initializes and runs the gRPC server
+// startServer initializes and runs the gRPC server and HTTP dashboard
 func startServer() {
-	port := viper.GetString("server.port")
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
+	// --- gRPC Server Setup ---
+	grpcPort := viper.GetString("server.port")
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", grpcPort))
 	if err != nil {
-		slog.Error("Failed to listen", "port", port, "error", err)
+		slog.Error("Failed to listen for gRPC", "port", grpcPort, "error", err)
 		os.Exit(1)
 	}
 
 	grpcServer := grpc.NewServer()
-
 	myStore := store.NewMonitorStore()
 	pb.RegisterMetricsServiceServer(grpcServer, &metricsServer{store: myStore})
 
-	slog.Info("Sentinel server starting", "port", port)
+	slog.Info("Sentinel gRPC server starting", "port", grpcPort)
 
-	// Start gRPC server in a goroutine
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {
 			slog.Error("Failed to serve gRPC server", "error", err)
@@ -101,12 +107,27 @@ func startServer() {
 		}
 	}()
 
-	// Set up shutdown
+	// --- HTTP Dashboard Setup ---
+	httpServer := dashboard.StartServer(myStore)
+
+	// --- Graceful Shutdown ---
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit // block until a signal is received
 
-	slog.Info("Shutting down Sentinel server...")
+	slog.Info("Shutting down Sentinel servers...")
+
+	// Create a context for HTTP server shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Shutdown HTTP server first (gracefully)
+	if err := httpServer.Shutdown(ctx); err != nil {
+		slog.Error("HTTP server shutdown error", "error", err)
+	}
+
+	// Then stop gRPC server (immediately)
 	grpcServer.Stop()
-	slog.Info("Sentinel server stopped.")
+
+	slog.Info("Sentinel servers stopped.")
 }

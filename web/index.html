@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="5"> <!-- Auto-refresh every 5 seconds -->
+    <title>Sentinel Dashboard</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        h1 { color: #0056b3; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: #fff; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #e2e2e2; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f1f1; }
+        .timestamp { font-size: 0.9em; color: #666; margin-top: 10px; }
+    </style>
+</head>
+<body>
+<h1>Sentinel Monitoring Dashboard</h1>
+<div class="timestamp">Last Updated: {{.CurrentTime.Format "2006-01-02 15:04:05"}}</div>
+<table>
+    <thead>
+    <tr>
+        <th>Agent ID</th>
+        <th>CPU %</th>
+        <th>RAM %</th>
+        <th>Last Seen</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{range .Nodes}}
+    <tr>
+        <td>{{.ID}}</td>
+        <td>{{.CPU | printf "%.2f"}}%</td>
+        <td>{{.RAM | printf "%.2f"}}%</td>
+        <td>{{.LastSeen.Format "15:04:05"}}</td>
+    </tr>
+    {{end}}
+    </tbody>
+</table>
+</body>
+</html>
