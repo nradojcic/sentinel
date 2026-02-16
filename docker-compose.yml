@@ -10,8 +10,9 @@ services:
       dockerfile: Dockerfile.server
     container_name: sentinel-server
     ports:
-      # Expose the server's gRPC port to the host machine.
+      # Expose the server's gRPC port, and the dashboard HTTP port to the host machine.
       - "50051:50051"
+      - "8080:8080"
     networks:
       - sentinel-net
 

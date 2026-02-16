@@ -26,9 +26,11 @@ COPY --from=builder /sentinel /sentinel
 
 # Copy the configuration file
 COPY .sentinel.yaml .sentinel.yaml
+COPY web ./web
 
-# Expose the port the gRPC server will listen on
+# Expose the port the gRPC server will listen on, and the HTTP port for dashboard
 EXPOSE 50051
+EXPOSE 8080
 
 # The command to run when the container starts
 CMD ["/sentinel", "server"]
