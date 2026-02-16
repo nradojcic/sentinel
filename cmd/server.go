@@ -6,6 +6,7 @@ import (
 	"io"
 	"log/slog"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -108,7 +109,21 @@ func startServer() {
 	}()
 
 	// --- HTTP Dashboard Setup ---
-	httpServer := dashboard.StartServer(myStore)
+	httpPort := viper.GetString("server.http-port")
+	httpServer, err := dashboard.NewServer(httpPort, "web/index.html", myStore)
+	if err != nil {
+		slog.Error("Failed to create HTTP server", "error", err)
+		os.Exit(1)
+	}
+
+	// Start the HTTP server in a goroutine
+	go func() {
+		slog.Info("Sentinel HTTP dashboard starting", "port", httpPort)
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("Failed to serve HTTP dashboard", "error", err)
+			os.Exit(1)
+		}
+	}()
 
 	// --- Graceful Shutdown ---
 	quit := make(chan os.Signal, 1)

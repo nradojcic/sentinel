@@ -5,13 +5,10 @@ import (
 	"html/template"
 	"log/slog"
 	"net/http"
-	"os"
-	"path/filepath"
 	"sort"
 	"time"
 
 	"github.com/nradojcic/sentinel/internal/store"
-	"github.com/spf13/viper"
 )
 
 var dashboardTemplate *template.Template
@@ -66,17 +63,14 @@ func dashboardHandler(myStore *store.MonitorStore, w http.ResponseWriter, r *htt
 	}
 }
 
-// StartServer sets up and starts the HTTP server for the dashboard
-func StartServer(myStore *store.MonitorStore) *http.Server {
-	httpDashboardPort := viper.GetString("server.http-port")
-
-	// Load the dashboard template once at startup
-	templatePath := filepath.Join("web", "index.html")
+// NewServer sets up and returns an HTTP server for the dashboard, but does not start it
+func NewServer(port, templatePath string, myStore *store.MonitorStore) (*http.Server, error) {
+	// Load the dashboard template
 	var err error
 	dashboardTemplate, err = template.ParseFiles(templatePath)
 	if err != nil {
 		slog.Error("Failed to parse dashboard template", "path", templatePath, "error", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("failed to parse dashboard template: %w", err)
 	}
 
 	mux := http.NewServeMux()
@@ -85,17 +79,9 @@ func StartServer(myStore *store.MonitorStore) *http.Server {
 	})
 
 	httpServer := &http.Server{
-		Addr:    fmt.Sprintf(":%s", httpDashboardPort),
+		Addr:    fmt.Sprintf(":%s", port),
 		Handler: mux,
 	}
 
-	slog.Info("Sentinel HTTP dashboard starting", "port", httpDashboardPort)
-	go func() {
-		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("Failed to serve HTTP dashboard", "error", err)
-			os.Exit(1)
-		}
-	}()
-
-	return httpServer
+	return httpServer, nil
 }
