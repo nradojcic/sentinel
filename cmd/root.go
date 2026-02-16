@@ -44,12 +44,13 @@ func initConfig() {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Find home directory.
+		// Search config in current directory and then in home directory
+		viper.AddConfigPath(".") // current working directory
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
+		viper.AddConfigPath(home) // home directory
 
-		// Search config in home directory with name ".sentinel" (without extension).
-		viper.AddConfigPath(home)
+		// Search config with name ".sentinel"
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(".sentinel")
 	}

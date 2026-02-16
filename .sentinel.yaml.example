@@ -1,0 +1,7 @@
+server:
+  port: "50051"
+
+agent:
+  server-addr: "localhost:50051"
+  agent-id: "default-agent"
+  interval: 5
