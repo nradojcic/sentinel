@@ -124,7 +124,17 @@ make test
 ### Test Results
 Sentinel maintains a high standard of code quality with comprehensive testing across all core packages.
 
-**Test Summary:**
+#### Test Execution Summary
+![Sentinel Test Execution Screenshot](assets/sentinel_tests.png)
+
+_Overview of successful test execution for all packages._
+
+#### Test Coverage Summary
+![Sentinel Test Coverage Screenshot](assets/sentinel_coverage.png)
+
+_Summary of code coverage across different packages, highlighting high testability._
+
+#### Test Summary:
 - **collector**: 75.0% coverage
 - **dashboard**: 88.0% coverage
 - **store**: 100.0% coverage
@@ -134,8 +144,6 @@ To create the visual line-by-line coverage report:
 make coverage
 ```
 - The report will be generated as `coverage.out` and `coverage.html` in the project root.
-- The full HTML report is included in this repository for easy viewing at the link below:
-- [View Coverage Report](assets/coverage.html)
 
 ### License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
