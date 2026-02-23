@@ -7,24 +7,24 @@ Sentinel is a high-performance distributed system monitor built in Go. It provid
 
 Designed for scalability and low latency, Sentinel leverages Go's concurrency and gRPC's streaming capabilities to gather and visualize metrics from a distributed fleet of agents in a centralized dashboard.
 
-### Visual Showcase
-#### Sentinel Monitoring Dashboard
+## Visual Showcase
+### Sentinel Monitoring Dashboard
 ![Sentinel Monitoring Dashboard Screenshot](assets/sentinel_dashboard.png)
 
 _A clean web-based dashboard displaying real-time metrics from connected agents._
 
-#### Server Console Output
+### Server Console Output
 ![Sentinel Server Console Output](assets/sentinel_server_console.png)
 
 _The server console showing received metrics from multiple agents._
 
-### Technical Highlights
+## Technical Highlights
 - **gRPC Client-side Streaming**: Implemented efficient metric reporting using gRPC client-side streaming, allowing agents to maintain a persistent connection and push updates with minimal overhead.
 - **Concurrency via Goroutines**: Leveraged Go's lightweight goroutines to handle multiple concurrent gRPC streams and the HTTP dashboard server simultaneously without blocking.
 - **Configuration Hierarchy**: Implemented a multi-layered configuration system using Viper and Cobra, supporting a precedence order of: CLI Flags > Environment Variables > Config Files > Defaults.
 - **Modular Architecture**: Separated metric collection, gRPC communication, and dashboard rendering into decoupled internal packages, ensuring high testability and maintainability.
 
-### Key Features
+## Key Features
 - **Real-time Monitoring**: Instant visibility into CPU and RAM usage across all connected agents.
 - **Distributed Architecture**: Centralized server architecture designed to gather reports from multiple remote nodes.
 - **Web-based Dashboard**: Clean and intuitive HTML dashboard to visualize the health of your entire system.
@@ -32,14 +32,14 @@ _The server console showing received metrics from multiple agents._
 - **Flexible Configuration**: Manage settings via command-line flags, environment variables, or YAML config files.
 - **Automated Demo**: Easy-to-run Docker Compose setup for instant demonstration and testing.
 
-### Getting Started
+## Getting Started
 
-#### Prerequisites
+### Prerequisites
 - Go (1.25 or later recommended)
 - Docker and Docker Compose (for the demo)
 - Make (for building and testing)
 
-#### Installation
+### Installation
 Clone the repository and build the binary:
 
 ```bash
@@ -52,10 +52,10 @@ The executable will be available in the local `bin/` directory. You can add it t
 cp bin/sentinel /usr/local/bin/
 ```
 
-### Usage
+## Usage
 Sentinel provides a clean CLI interface powered by Cobra. It can be run as either a **server** or an **agent**.
 
-#### 1. Running the Docker Demo
+### 1. Running the Docker Demo
 You can quickly test Sentinel with a pre-configured 1-server, 5-agent distributed system:
 
 1.  **Run the demo** with a single command from the project's root directory:
@@ -69,7 +69,7 @@ You can quickly test Sentinel with a pre-configured 1-server, 5-agent distribute
     docker-compose down
     ```
 
-#### 2. Manual Execution
+### 2. Manual Execution
 
 **Start the Server:**
 ```bash
@@ -81,20 +81,20 @@ sentinel server --port 50051 --http-port 8080
 sentinel agent --agent-id "node-01" --server-addr "localhost:50051" --interval 5
 ```
 
-#### Command-Specific Flags
-`server` command flags:
+### Flags
+**server command flags:**
 - `--port string`: Server gRPC port (default "50051").
 - `--http-port string`: Dashboard HTTP port (default "8080").
 
-`agent` command flags:
+**agent command flags:**
 - `--agent-id string`: Unique ID for the agent (default "default-agent").
 - `--server-addr string`: Address of the Sentinel server (default "localhost:50051").
 - `--interval int`: Report interval in seconds (default 5).
 
-Global flag:
+**Global flag:**
 - `-c, --config string`: Path to config file (default is `$HOME/.sentinel.yaml`).
 
-### Configuration
+## Configuration
 Sentinel uses Viper for flexible configuration. It looks for a `.sentinel.yaml` file in the current directory or your home folder.
 
 Example `.sentinel.yaml`:
@@ -108,14 +108,14 @@ agent:
   interval: 5
 ```
 
-### Tech Stack
+## Tech Stack
 - **Go**: The core language, chosen for its performance and concurrency model.
 - **gRPC & Protobuf**: For efficient, type-safe communication between agents and server.
 - **Cobra & Viper**: For modern CLI interface and configuration management.
 - **gopsutil**: To gather system metrics (CPU, RAM) across different platforms.
 - **HTML Templates**: For rendering the real-time web dashboard.
 
-### Development
+## Development
 Run the test suite with the race detector enabled:
 ```bash
 make test
